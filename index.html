@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Expo Mood Map</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #121212; color: white; }
+        #status { color: #00ff00; margin: 20px; }
+        .score-box { font-size: 3rem; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Expo Sentiment Tracker</h1>
+    <button id="start-btn" style="padding: 20px; font-size: 1.2rem;">Click to Speak</button>
+    <p id="status">Ready...</p>
+    <div id="transcript" style="font-style: italic; color: #aaa;"></div>
+    <div class="score-box">Mood Score: <span id="score">0</span></div>
+
+    <script>
+        const btn = document.getElementById('start-btn');
+        const status = document.getElementById('status');
+        const transcriptDiv = document.getElementById('transcript');
+        const scoreDisplay = document.getElementById('score');
+
+        // Simple sentiment dictionary
+        const keywords = { "good": 1, "great": 2, "amazing": 3, "bad": -1, "boring": -2, "slow": -1, "love": 2 };
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+
+        btn.onclick = () => {
+            recognition.start();
+            status.innerText = "Listening...";
+        };
+
+        recognition.onresult = (event) => {
+            const text = event.results[0][0].transcript.toLowerCase();
+            transcriptDiv.innerText = `"${text}"`;
+            
+            // Calculate Score
+            let score = 0;
+            const words = text.split(" ");
+            words.forEach(word => {
+                if (keywords[word]) score += keywords[word];
+            });
+
+            scoreDisplay.innerText = score;
+            status.innerText = "Done!";
+        };
+    </script>
+</body>
+</html>
