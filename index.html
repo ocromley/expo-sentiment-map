@@ -6,17 +6,21 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #1a1a2e; color: #e94560; padding: 20px; }
-        #start-btn { padding: 15px 30px; font-size: 1.2rem; cursor: pointer; border-radius: 50px; border: none; background: #e94560; color: white; transition: 0.3s; }
+        #start-btn { padding: 15px 30px; font-size: 1.2rem; cursor: pointer; border-radius: 50px; border: none; background: #e94560; color: white; transition: 0.3s; margin-bottom: 10px; }
         #start-btn:hover { background: #0f3460; }
+        /* Added a style for the reset button */
+        #reset-btn { padding: 10px 20px; font-size: 1rem; cursor: pointer; border-radius: 50px; border: none; background: #555; color: white; transition: 0.3s; }
         .chart-container { width: 80%; max-width: 600px; margin: 30px auto; background: white; padding: 20px; border-radius: 15px; }
         #status { color: #4ecca3; font-weight: bold; }
     </style>
 </head>
 <body>
     <h1>🎤 Expo Mood Map</h1>
-    <p>Tell the AI how your day is going!</p>
+    <p>What are you thinking about Tech Expo in Chicago?</p>
     
     <button id="start-btn">Start Talking</button>
+    <button id="reset-btn">Reset</button>
+    
     <p id="status">Ready...</p>
     
     <div class="chart-container">
@@ -25,6 +29,7 @@
 
     <script>
         const btn = document.getElementById('start-btn');
+        const resetBtn = document.getElementById('reset-btn');
         const status = document.getElementById('status');
         
         // Setup Chart
@@ -32,16 +37,20 @@
         const moodChart = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ['Happy/Good', 'Neutral', 'Bored/Bad'],
+                labels: ['Positive 😊', 'Neutral 😐', 'Negative ☹️'],
                 datasets: [{
                     label: '# of Responses',
                     data: [0, 0, 0],
                     backgroundColor: ['#4ecca3', '#fca311', '#e94560']
                 }]
+            },
+            options: {
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                }
             }
         });
 
-        // Speech Recognition Logic
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const recognition = new SpeechRecognition();
 
@@ -50,14 +59,28 @@
             status.innerText = "Listening...";
         };
 
+        // RESET LOGIC
+        resetBtn.onclick = () => {
+            moodChart.data.datasets[0].data = [0, 0, 0];
+            moodChart.update();
+            status.innerText = "Chart reset!";
+        };
+
         recognition.onresult = (event) => {
             const text = event.results[0][0].transcript.toLowerCase();
             status.innerText = `You said: "${text}"`;
             
-            // Simple logic to update chart
-            if (text.includes("great") || text.includes("good") || text.includes("happy")) {
+            // EXPANDED KEYWORDS FOR CHICAGO TECH EXPO
+            const positiveKeywords = ["great", "good", "happy", "amazing", "cool", "chicago", "awesome", "impressive", "innovative", "expo"];
+            const negativeKeywords = ["bad", "sad", "boring", "slow", "terrible", "confused", "loud", "crowded"];
+
+            // Check if ANY positive keyword is in the text
+            const isPositive = positiveKeywords.some(word => text.includes(word));
+            const isNegative = negativeKeywords.some(word => text.includes(word));
+
+            if (isPositive) {
                 moodChart.data.datasets[0].data[0]++;
-            } else if (text.includes("bad") || text.includes("sad") || text.includes("boring")) {
+            } else if (isNegative) {
                 moodChart.data.datasets[0].data[2]++;
             } else {
                 moodChart.data.datasets[0].data[1]++;
