@@ -1,29 +1,47 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Expo Mood Map</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; background: #121212; color: white; }
-        #status { color: #00ff00; margin: 20px; }
-        .score-box { font-size: 3rem; margin-top: 20px; }
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; background: #1a1a2e; color: #e94560; padding: 20px; }
+        #start-btn { padding: 15px 30px; font-size: 1.2rem; cursor: pointer; border-radius: 50px; border: none; background: #e94560; color: white; transition: 0.3s; }
+        #start-btn:hover { background: #0f3460; }
+        .chart-container { width: 80%; max-width: 600px; margin: 30px auto; background: white; padding: 20px; border-radius: 15px; }
+        #status { color: #4ecca3; font-weight: bold; }
     </style>
 </head>
 <body>
-    <h1>Expo Sentiment Tracker</h1>
-    <button id="start-btn" style="padding: 20px; font-size: 1.2rem;">Click to Speak</button>
+    <h1>🎤 Expo Mood Map</h1>
+    <p>Tell the AI how your day is going!</p>
+    
+    <button id="start-btn">Start Talking</button>
     <p id="status">Ready...</p>
-    <div id="transcript" style="font-style: italic; color: #aaa;"></div>
-    <div class="score-box">Mood Score: <span id="score">0</span></div>
+    
+    <div class="chart-container">
+        <canvas id="moodChart"></canvas>
+    </div>
 
     <script>
         const btn = document.getElementById('start-btn');
         const status = document.getElementById('status');
-        const transcriptDiv = document.getElementById('transcript');
-        const scoreDisplay = document.getElementById('score');
+        
+        // Setup Chart
+        const ctx = document.getElementById('moodChart').getContext('2d');
+        const moodChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Happy/Good', 'Neutral', 'Bored/Bad'],
+                datasets: [{
+                    label: '# of Responses',
+                    data: [0, 0, 0],
+                    backgroundColor: ['#4ecca3', '#fca311', '#e94560']
+                }]
+            }
+        });
 
-        // Simple sentiment dictionary
-        const keywords = { "good": 1, "great": 2, "amazing": 3, "bad": -1, "boring": -2, "slow": -1, "love": 2 };
-
+        // Speech Recognition Logic
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         const recognition = new SpeechRecognition();
 
@@ -34,17 +52,17 @@
 
         recognition.onresult = (event) => {
             const text = event.results[0][0].transcript.toLowerCase();
-            transcriptDiv.innerText = `"${text}"`;
+            status.innerText = `You said: "${text}"`;
             
-            // Calculate Score
-            let score = 0;
-            const words = text.split(" ");
-            words.forEach(word => {
-                if (keywords[word]) score += keywords[word];
-            });
-
-            scoreDisplay.innerText = score;
-            status.innerText = "Done!";
+            // Simple logic to update chart
+            if (text.includes("great") || text.includes("good") || text.includes("happy")) {
+                moodChart.data.datasets[0].data[0]++;
+            } else if (text.includes("bad") || text.includes("sad") || text.includes("boring")) {
+                moodChart.data.datasets[0].data[2]++;
+            } else {
+                moodChart.data.datasets[0].data[1]++;
+            }
+            moodChart.update();
         };
     </script>
 </body>
